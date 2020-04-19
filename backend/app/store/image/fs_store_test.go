@@ -107,7 +107,6 @@ func TestFsStore_LoadAfterSave(t *testing.T) {
 	id := "test_img"
 	err := svc.Save(id, gopherPNGBytes())
 	assert.NoError(t, err)
-	t.Log(id)
 
 	data, err := svc.Load(id)
 	assert.NoError(t, err)
@@ -125,7 +124,6 @@ func TestFsStore_LoadAfterCommit(t *testing.T) {
 	id := "test_img"
 	err := svc.Save(id, gopherPNGBytes())
 	assert.NoError(t, err)
-	t.Log(id)
 	err = svc.Commit(id)
 	require.NoError(t, err)
 
@@ -230,6 +228,28 @@ func TestFsStore_Cleanup(t *testing.T) {
 	assert.Error(t, err, "no file on staging anymore")
 	_, err = os.Stat(img3)
 	assert.Error(t, err, "no file on staging anymore")
+}
+
+func TestFsStore_GetStagingImages(t *testing.T) {
+	svc, teardown := prepareImageTest(t)
+	defer teardown()
+
+	// get images before saving, should be empty
+	ids, ts, err := svc.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Empty(t, ids)
+	assert.True(t, ts.IsZero())
+
+	// save image
+	id := "test_img"
+	err = svc.Save(id, gopherPNGBytes())
+	assert.NoError(t, err)
+
+	// get images after saving, should contain saved image
+	ids, ts, err = svc.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Equal(t, []string{id}, ids)
+	assert.False(t, ts.IsZero())
 }
 
 func prepareImageTest(t *testing.T) (svc *FileSystem, teardown func()) {

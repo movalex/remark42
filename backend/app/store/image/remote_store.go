@@ -46,3 +46,19 @@ func (r *RPC) Cleanup(_ context.Context, ttl time.Duration) error {
 	_, err := r.Call("image.cleanup", ttl)
 	return err
 }
+
+// GetStagingImages returns images currently in staging, and their oldest timestamp
+func (r *RPC) GetStagingImages() ([]string, time.Time, error) {
+	resp, err := r.Call("image.get_staging_images")
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	var result struct {
+		IDs []string
+		TS  time.Time
+	}
+	if err = json.Unmarshal(*resp.Result, &result); err != nil {
+		return nil, time.Time{}, err
+	}
+	return result.IDs, result.TS, err
+}

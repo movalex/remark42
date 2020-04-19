@@ -124,3 +124,28 @@ func TestRPC_imgCleanupHndl(t *testing.T) {
 	_, err = ri.Load(id)
 	assert.EqualError(t, err, "image test_img not found")
 }
+
+func TestRPC_imgGetStagingImagesHndl(t *testing.T) {
+	_, port, teardown := prepTestStore(t)
+	defer teardown()
+	api := fmt.Sprintf("http://localhost:%d/test", port)
+
+	ri := image.RPC{Client: jrpc.Client{API: api, Client: http.Client{Timeout: 1 * time.Second}}}
+
+	// get images before saving, should be empty
+	ids, ts, err := ri.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Empty(t, ids)
+	assert.True(t, ts.IsZero())
+
+	// save
+	id := "test_img"
+	err = ri.Save(id, gopherPNGBytes())
+	assert.NoError(t, err)
+
+	// get images after saving, should contain saved image
+	ids, ts, err = ri.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Equal(t, []string{id}, ids)
+	assert.False(t, ts.IsZero())
+}

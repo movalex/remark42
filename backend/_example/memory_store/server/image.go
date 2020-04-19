@@ -54,3 +54,12 @@ func (s *RPC) imgCleanupHndl(id uint64, params json.RawMessage) (rr jrpc.Respons
 	err := s.img.Cleanup(context.TODO(), ttl)
 	return jrpc.EncodeResponse(id, nil, err)
 }
+
+func (s *RPC) imgGetStagingImagesHndl(id uint64, _ json.RawMessage) (rr jrpc.Response) {
+	ids, ts, err := s.img.GetStagingImages()
+	var result = struct {
+		IDs []string
+		TS  time.Time
+	}{IDs: ids, TS: ts}
+	return jrpc.EncodeResponse(id, result, err)
+}

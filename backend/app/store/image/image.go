@@ -63,6 +63,7 @@ type Store interface {
 	Save(id string, img []byte) error // store image with passed id to staging
 	Load(id string) ([]byte, error)   // load image by ID
 
+	GetStagingImages() ([]string, time.Time, error)       // get images currently in staging, and their oldest timestamp
 	Commit(id string) error                               // move image from staging to permanent
 	Cleanup(ctx context.Context, ttl time.Duration) error // run removal loop for old images on staging
 }
@@ -148,6 +149,11 @@ func (s *Service) Cleanup(ctx context.Context) {
 			}
 		}
 	}
+}
+
+// GetStagingImages returns staging images IDs, and earliest timestamp from them
+func (s *Service) GetStagingImages() ([]string, time.Time, error) {
+	return s.store.GetStagingImages()
 }
 
 // Close flushes all in-progress submits and enforces waiting commits

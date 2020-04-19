@@ -115,6 +115,34 @@ func (f *FileSystem) Cleanup(_ context.Context, ttl time.Duration) error {
 	return errors.Wrap(err, "failed to cleanup images")
 }
 
+// GetStagingImages returns images currently in staging, and their oldest timestamp
+func (f *FileSystem) GetStagingImages() (ids []string, ts time.Time, err error) {
+	if _, err = os.Stat(f.Staging); os.IsNotExist(err) {
+		return nil, time.Time{}, nil
+	}
+
+	err = filepath.Walk(f.Staging, func(fpath string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+
+		ids = append(ids, f.idFromLocation(fpath))
+
+		created := info.ModTime()
+		if ts.IsZero() || created.Before(ts) {
+			ts = created
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+	return ids, ts, nil
+}
+
 // location gets full path for id by adding partition to the final path in order to keep files in different subdirectories
 // and avoid too many files in a single place.
 // the end result is a full path like this - /tmp/images/user1/92/xxx-yyy.png.
@@ -143,4 +171,15 @@ func (f *FileSystem) location(base string, id string) string {
 	}
 
 	return path.Join(base, user, partition(id), file)
+}
+
+// idFromLocation returns image ID for given location
+func (f *FileSystem) idFromLocation(fpath string) string {
+	p := strings.Split(fpath, "/")
+	user := p[len(p)-3]
+	id := p[len(p)-1]
+	if user == "unknown" {
+		return id
+	}
+	return path.Join(user, id)
 }

@@ -80,3 +80,26 @@ func TestMemImage_Cleanup(t *testing.T) {
 	err := svc.Cleanup(context.TODO(), time.Minute)
 	assert.NoError(t, err)
 }
+
+func TestMemImage_GetStagingImages(t *testing.T) {
+	svc := NewMemImageStore()
+	gopher, err := ioutil.ReadAll(gopherPNG())
+	assert.NoError(t, err)
+
+	// get images before saving, should be empty
+	ids, ts, err := svc.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Empty(t, ids)
+	assert.True(t, ts.IsZero())
+
+	// save image
+	id := "test_img"
+	err = svc.Save(id, gopher)
+	assert.NoError(t, err)
+
+	// get images after saving, should contain saved image
+	ids, ts, err = svc.GetStagingImages()
+	assert.NoError(t, err)
+	assert.Equal(t, []string{id}, ids)
+	assert.False(t, ts.IsZero())
+}
