@@ -57,10 +57,10 @@ func (s *RPC) addHandlers() {
 
 	// image store handlers
 	s.Group("image", jrpc.HandlersGroup{
-		"save_with_id":         s.imgSaveWithIDHndl,
-		"load":                 s.imgLoadHndl,
-		"commit":               s.imgCommitHndl,
-		"cleanup":              s.imgCleanupHndl,
-		"get_first_staging_ts": s.imgGetFirstStagingTsHndl,
+		"save_with_id": s.imgSaveWithIDHndl,
+		"load":         s.imgLoadHndl,
+		"commit":       s.imgCommitHndl,
+		"cleanup":      s.imgCleanupHndl,
+		"info":         s.imgInfoHndl,
 	})
 }

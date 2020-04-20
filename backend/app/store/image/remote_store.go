@@ -47,14 +47,15 @@ func (r *RPC) Cleanup(_ context.Context, ttl time.Duration) error {
 	return err
 }
 
-// GetFirstStagingTs returns oldest timestamp from images currently in staging
-func (r *RPC) GetFirstStagingTs() (ts time.Time, err error) {
-	resp, err := r.Call("image.get_first_staging_ts")
+// Info returns meta information about storage
+func (r *RPC) Info() (StoreInfo, error) {
+	resp, err := r.Call("image.info")
 	if err != nil {
-		return time.Time{}, err
+		return StoreInfo{}, err
 	}
-	if err = json.Unmarshal(*resp.Result, &ts); err != nil {
-		return time.Time{}, err
+	info := StoreInfo{}
+	if err = json.Unmarshal(*resp.Result, &info); err != nil {
+		return StoreInfo{}, err
 	}
-	return ts, err
+	return info, err
 }

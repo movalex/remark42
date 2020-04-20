@@ -58,6 +58,11 @@ type ServiceParams struct {
 	cleanupTTL time.Duration
 }
 
+// StoreInfo contains image store meta information
+type StoreInfo struct {
+	FirstStagingImageTS time.Time
+}
+
 // To regenerate mock run from this directory:
 // sh -c "mockery -inpkg -name Store -print > /tmp/image-mock.tmp && mv /tmp/image-mock.tmp image_mock.go"
 
@@ -66,10 +71,10 @@ type ServiceParams struct {
 // Two-stage commit scheme is used for not storing images which are uploaded but later never used in the comments,
 // e.g. when somebody uploaded a picture but did not sent the comment.
 type Store interface {
+	Info() (StoreInfo, error)         // get meta information about storage
 	Save(id string, img []byte) error // store image with passed id to staging
 	Load(id string) ([]byte, error)   // load image by ID
 
-	GetFirstStagingTs() (time.Time, error)                // get oldest timestamp from images currently in staging
 	Commit(id string) error                               // move image from staging to permanent
 	Cleanup(ctx context.Context, ttl time.Duration) error // run removal loop for old images on staging
 }
@@ -161,9 +166,9 @@ func (s *Service) Cleanup(ctx context.Context) {
 	}
 }
 
-// GetFirstStagingTs returns oldest timestamp from images currently in staging
-func (s *Service) GetFirstStagingTs() (time.Time, error) {
-	return s.store.GetFirstStagingTs()
+// Info returns meta information about storage
+func (s *Service) Info() (StoreInfo, error) {
+	return s.store.Info()
 }
 
 // Close flushes all in-progress submits and enforces waiting commits

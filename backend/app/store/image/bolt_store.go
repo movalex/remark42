@@ -141,14 +141,15 @@ func (b *Bolt) Cleanup(_ context.Context, ttl time.Duration) error {
 	return err
 }
 
-// GetFirstStagingTs returns oldest timestamp from images currently in staging
-func (b *Bolt) GetFirstStagingTs() (ts time.Time, err error) {
-	err = b.db.View(func(tx *bolt.Tx) error {
+// Info returns meta information about storage
+func (b *Bolt) Info() (StoreInfo, error) {
+	var ts time.Time
+	err := b.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(insertTimeBktName)).Cursor()
 
 		for id, tsData := c.First(); id != nil; id, tsData = c.Next() {
 			var createdRaw int64
-			err = binary.Read(bytes.NewReader(tsData), binary.LittleEndian, &createdRaw)
+			err := binary.Read(bytes.NewReader(tsData), binary.LittleEndian, &createdRaw)
 			if err != nil {
 				return errors.Wrapf(err, "failed to deserialize timestamp for %s", id)
 			}
@@ -160,5 +161,5 @@ func (b *Bolt) GetFirstStagingTs() (ts time.Time, err error) {
 		}
 		return nil
 	})
-	return ts, err
+	return StoreInfo{FirstStagingImageTS: ts}, err
 }

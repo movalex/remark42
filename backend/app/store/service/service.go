@@ -203,10 +203,11 @@ func (s *DataStore) DeleteUserDetail(siteID string, userID string, detail engine
 // ResubmitStagingImages retrieves timestamp of the oldest image in staging and
 // calls s.submitImages on all comments newer than it
 func (s *DataStore) ResubmitStagingImages(sites []string) error {
-	ts, err := s.ImageService.GetFirstStagingTs()
+	info, err := s.ImageService.Info()
 	if err != nil {
 		return err
 	}
+	ts := info.FirstStagingImageTS
 	if ts.IsZero() {
 		return nil
 	}

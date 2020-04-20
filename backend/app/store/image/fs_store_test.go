@@ -230,23 +230,23 @@ func TestFsStore_Cleanup(t *testing.T) {
 	assert.Error(t, err, "no file on staging anymore")
 }
 
-func TestFsStore_GetFirstStagingTs(t *testing.T) {
+func TestFsStore_Info(t *testing.T) {
 	svc, teardown := prepareImageTest(t)
 	defer teardown()
 
 	// get ts on empty storage, should be zero
-	ts, err := svc.GetFirstStagingTs()
+	ts, err := svc.Info()
 	assert.NoError(t, err)
-	assert.True(t, ts.IsZero())
+	assert.True(t, ts.FirstStagingImageTS.IsZero())
 
 	// save image
 	err = svc.Save("test_img", gopherPNGBytes())
 	assert.NoError(t, err)
 
 	// get ts after saving, should be non-zero
-	ts, err = svc.GetFirstStagingTs()
+	ts, err = svc.Info()
 	assert.NoError(t, err)
-	assert.False(t, ts.IsZero())
+	assert.False(t, ts.FirstStagingImageTS.IsZero())
 }
 
 func prepareImageTest(t *testing.T) (svc *FileSystem, teardown func()) {

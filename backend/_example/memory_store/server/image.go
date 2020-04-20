@@ -55,7 +55,7 @@ func (s *RPC) imgCleanupHndl(id uint64, params json.RawMessage) (rr jrpc.Respons
 	return jrpc.EncodeResponse(id, nil, err)
 }
 
-func (s *RPC) imgGetFirstStagingTsHndl(id uint64, _ json.RawMessage) (rr jrpc.Response) {
-	ts, err := s.img.GetFirstStagingTs()
-	return jrpc.EncodeResponse(id, ts, err)
+func (s *RPC) imgInfoHndl(id uint64, _ json.RawMessage) (rr jrpc.Response) {
+	info, err := s.img.Info()
+	return jrpc.EncodeResponse(id, info, err)
 }

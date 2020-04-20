@@ -125,24 +125,24 @@ func TestRPC_imgCleanupHndl(t *testing.T) {
 	assert.EqualError(t, err, "image test_img not found")
 }
 
-func TestRPC_imgGetFirstStagingTsHndl(t *testing.T) {
+func TestRPC_imgInfoHndl(t *testing.T) {
 	_, port, teardown := prepTestStore(t)
 	defer teardown()
 	api := fmt.Sprintf("http://localhost:%d/test", port)
 
 	ri := image.RPC{Client: jrpc.Client{API: api, Client: http.Client{Timeout: 1 * time.Second}}}
 
-	// get ts on empty storage, should be zero
-	ts, err := ri.GetFirstStagingTs()
+	// get info on empty storage, should be zero
+	info, err := ri.Info()
 	assert.NoError(t, err)
-	assert.True(t, ts.IsZero())
+	assert.True(t, info.FirstStagingImageTS.IsZero())
 
 	// save
 	err = ri.Save("test_img", gopherPNGBytes())
 	assert.NoError(t, err)
 
-	// get ts after saving, should be non-zero
-	ts, err = ri.GetFirstStagingTs()
+	// get info after saving, should be non-zero
+	info, err = ri.Info()
 	assert.NoError(t, err)
-	assert.False(t, ts.IsZero())
+	assert.False(t, info.FirstStagingImageTS.IsZero())
 }

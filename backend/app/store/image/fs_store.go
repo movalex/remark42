@@ -115,13 +115,14 @@ func (f *FileSystem) Cleanup(_ context.Context, ttl time.Duration) error {
 	return errors.Wrap(err, "failed to cleanup images")
 }
 
-// GetFirstStagingTs returns oldest timestamp from images currently in staging
-func (f *FileSystem) GetFirstStagingTs() (ts time.Time, err error) {
-	if _, err = os.Stat(f.Staging); os.IsNotExist(err) {
-		return time.Time{}, nil
+// Info returns meta information about storage
+func (f *FileSystem) Info() (StoreInfo, error) {
+	if _, err := os.Stat(f.Staging); os.IsNotExist(err) {
+		return StoreInfo{}, nil
 	}
 
-	err = filepath.Walk(f.Staging, func(fpath string, info os.FileInfo, err error) error {
+	var ts time.Time
+	err := filepath.Walk(f.Staging, func(fpath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -136,9 +137,9 @@ func (f *FileSystem) GetFirstStagingTs() (ts time.Time, err error) {
 		return nil
 	})
 	if err != nil {
-		return time.Time{}, err
+		return StoreInfo{}, err
 	}
-	return ts, nil
+	return StoreInfo{FirstStagingImageTS: ts}, nil
 }
 
 // location gets full path for id by adding partition to the final path in order to keep files in different subdirectories

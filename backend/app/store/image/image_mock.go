@@ -39,15 +39,15 @@ func (_m *MockStore) Commit(id string) error {
 	return r0
 }
 
-// GetFirstStagingTs provides a mock function with given fields:
-func (_m *MockStore) GetFirstStagingTs() (time.Time, error) {
+// Info provides a mock function with given fields:
+func (_m *MockStore) Info() (StoreInfo, error) {
 	ret := _m.Called()
 
-	var r0 time.Time
-	if rf, ok := ret.Get(0).(func() time.Time); ok {
+	var r0 StoreInfo
+	if rf, ok := ret.Get(0).(func() StoreInfo); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(time.Time)
+		r0 = ret.Get(0).(StoreInfo)
 	}
 
 	var r1 error

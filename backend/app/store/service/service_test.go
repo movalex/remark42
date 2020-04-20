@@ -1328,7 +1328,7 @@ func TestService_ResubmitStagingImages(t *testing.T) {
 	require.NoError(t, err)
 
 	// resubmit single comment with single image
-	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}.Add(time.Second), nil)
+	mockStore.On("Info").Once().Return(image.StoreInfo{FirstStagingImageTS: time.Time{}.Add(time.Second)}, nil)
 	err = b.ResubmitStagingImages([]string{"radio-t"})
 	assert.NoError(t, err)
 
@@ -1336,7 +1336,7 @@ func TestService_ResubmitStagingImages(t *testing.T) {
 	mockStore.On("Commit", "dev_user/bqf122eq9r8ad657n3ng").Once().Return(nil)
 	time.Sleep(time.Millisecond * 100)
 
-	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
+	mockStore.AssertNumberOfCalls(t, "Info", 1)
 	mockStore.AssertNumberOfCalls(t, "Commit", 1)
 }
 
@@ -1355,11 +1355,11 @@ func TestService_ResubmitStagingImagesEmpty(t *testing.T) {
 		AdminStore: admin.NewStaticKeyStore("secret 123"), ImageService: imgSvc}
 
 	// resubmit single comment with single image
-	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}, nil)
+	mockStore.On("Info").Once().Return(image.StoreInfo{FirstStagingImageTS: time.Time{}}, nil)
 	err := b.ResubmitStagingImages([]string{"radio-t"})
 	assert.NoError(t, err)
 
-	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
+	mockStore.AssertNumberOfCalls(t, "Info", 1)
 }
 
 func TestService_ResubmitStagingImagesError(t *testing.T) {
@@ -1377,11 +1377,11 @@ func TestService_ResubmitStagingImagesError(t *testing.T) {
 		AdminStore: admin.NewStaticKeyStore("secret 123"), ImageService: imgSvc}
 
 	// resubmit single comment with single image
-	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}, errors.New("mock_err"))
+	mockStore.On("Info").Once().Return(image.StoreInfo{FirstStagingImageTS: time.Time{}}, errors.New("mock_err"))
 	err := b.ResubmitStagingImages([]string{"radio-t"})
 	assert.EqualError(t, err, "mock_err")
 
-	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
+	mockStore.AssertNumberOfCalls(t, "Info", 1)
 }
 
 func TestService_alterComment(t *testing.T) {

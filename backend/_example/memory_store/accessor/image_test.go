@@ -81,22 +81,22 @@ func TestMemImage_Cleanup(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestMemImage_GetFirstStagingTs(t *testing.T) {
+func TestMemImage_Info(t *testing.T) {
 	svc := NewMemImageStore()
 	gopher, err := ioutil.ReadAll(gopherPNG())
 	assert.NoError(t, err)
 
-	// get ts on empty storage, should be zero
-	ts, err := svc.GetFirstStagingTs()
+	// get info on empty storage, should be zero
+	info, err := svc.Info()
 	assert.NoError(t, err)
-	assert.True(t, ts.IsZero())
+	assert.True(t, info.FirstStagingImageTS.IsZero())
 
 	// save image
 	err = svc.Save("test_img", gopher)
 	assert.NoError(t, err)
 
-	// get ts after saving, should be non-zero
-	ts, err = svc.GetFirstStagingTs()
+	// get info after saving, should be non-zero
+	info, err = svc.Info()
 	assert.NoError(t, err)
-	assert.False(t, ts.IsZero())
+	assert.False(t, info.FirstStagingImageTS.IsZero())
 }

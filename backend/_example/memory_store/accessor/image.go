@@ -13,6 +13,8 @@ import (
 
 	log "github.com/go-pkgz/lgr"
 	"github.com/pkg/errors"
+
+	"github.com/umputun/remark/backend/app/store/image"
 )
 
 // MemImage implements image.Store with memory backend
@@ -96,8 +98,9 @@ func (m *MemImage) Cleanup(_ context.Context, ttl time.Duration) error {
 	return nil
 }
 
-// GetFirstStagingTs returns oldest timestamp from images currently in staging
-func (m *MemImage) GetFirstStagingTs() (ts time.Time, err error) {
+// Info returns meta information about storage
+func (m *MemImage) Info() (image.StoreInfo, error) {
+	var ts time.Time
 	m.RLock()
 	for _, t := range m.insertTime {
 		if ts.IsZero() || t.Before(ts) {
@@ -106,5 +109,5 @@ func (m *MemImage) GetFirstStagingTs() (ts time.Time, err error) {
 	}
 	m.RUnlock()
 
-	return ts, nil
+	return image.StoreInfo{FirstStagingImageTS: ts}, nil
 }
