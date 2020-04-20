@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -1277,8 +1278,9 @@ func TestService_submitImages(t *testing.T) {
 	lgr.Setup(lgr.Debug, lgr.CallerFile, lgr.CallerFunc)
 
 	mockStore := image.MockStore{}
-	mockStore.On("Commit", mock.Anything, mock.Anything).Times(2).Return(nil)
-	imgSvc := image.NewService(&mockStore, image.ServiceParams{EditDuration: 50 * time.Millisecond * 50})
+	mockStore.On("Commit", mock.Anything).Times(2).Return(nil)
+	imgSvc := image.NewService(&mockStore, image.ServiceParams{EditDuration: 50 * time.Millisecond})
+	defer imgSvc.Close(context.TODO())
 
 	// two comments for https://radio-t.com
 	eng, teardown := prepStoreEngine(t)
@@ -1298,6 +1300,88 @@ func TestService_submitImages(t *testing.T) {
 
 	b.submitImages(c.Locator, c.ID)
 	time.Sleep(250 * time.Millisecond)
+}
+
+func TestService_ResubmitStagingImages(t *testing.T) {
+	mockStore := image.MockStore{}
+	imgSvc := image.NewService(&mockStore,
+		image.ServiceParams{
+			EditDuration: 10 * time.Millisecond,
+			ImageAPI:     "http://127.0.0.1:8080/api/v1/picture/",
+		})
+	defer imgSvc.Close(context.TODO())
+
+	eng, teardown := prepStoreEngine(t)
+	defer teardown()
+	b := DataStore{Engine: eng, EditDuration: 10 * time.Millisecond,
+		AdminStore: admin.NewStaticKeyStore("secret 123"), ImageService: imgSvc}
+
+	// create comment with image without preparing it properly
+	comment := store.Comment{
+		ID:        "id-0",
+		Text:      `<img src="http://127.0.0.1:8080/api/v1/picture/dev_user/bqf122eq9r8ad657n3ng" alt="startrails_01.jpg">`,
+		Timestamp: time.Date(2017, 12, 20, 15, 18, 22, 0, time.Local),
+		Locator:   store.Locator{URL: "https://radio-t.com", SiteID: "radio-t"},
+		User:      store.User{ID: "user1", Name: "user name"},
+	}
+	_, err := b.Engine.Create(comment)
+	require.NoError(t, err)
+
+	// resubmit single comment with single image
+	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}.Add(time.Second), nil)
+	err = b.ResubmitStagingImages([]string{"radio-t"})
+	assert.NoError(t, err)
+
+	// wait for Submit goroutine to commit image
+	mockStore.On("Commit", "dev_user/bqf122eq9r8ad657n3ng").Once().Return(nil)
+	time.Sleep(time.Millisecond * 100)
+
+	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
+	mockStore.AssertNumberOfCalls(t, "Commit", 1)
+}
+
+func TestService_ResubmitStagingImagesEmpty(t *testing.T) {
+	mockStore := image.MockStore{}
+	imgSvc := image.NewService(&mockStore,
+		image.ServiceParams{
+			EditDuration: 10 * time.Millisecond,
+			ImageAPI:     "http://127.0.0.1:8080/api/v1/picture/",
+		})
+	defer imgSvc.Close(context.TODO())
+
+	eng, teardown := prepStoreEngine(t)
+	defer teardown()
+	b := DataStore{Engine: eng, EditDuration: 10 * time.Millisecond,
+		AdminStore: admin.NewStaticKeyStore("secret 123"), ImageService: imgSvc}
+
+	// resubmit single comment with single image
+	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}, nil)
+	err := b.ResubmitStagingImages([]string{"radio-t"})
+	assert.NoError(t, err)
+
+	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
+}
+
+func TestService_ResubmitStagingImagesError(t *testing.T) {
+	mockStore := image.MockStore{}
+	imgSvc := image.NewService(&mockStore,
+		image.ServiceParams{
+			EditDuration: 10 * time.Millisecond,
+			ImageAPI:     "http://127.0.0.1:8080/api/v1/picture/",
+		})
+	defer imgSvc.Close(context.TODO())
+
+	eng, teardown := prepStoreEngine(t)
+	defer teardown()
+	b := DataStore{Engine: eng, EditDuration: 10 * time.Millisecond,
+		AdminStore: admin.NewStaticKeyStore("secret 123"), ImageService: imgSvc}
+
+	// resubmit single comment with single image
+	mockStore.On("GetFirstStagingTs").Once().Return(time.Time{}, errors.New("mock_err"))
+	err := b.ResubmitStagingImages([]string{"radio-t"})
+	assert.EqualError(t, err, "mock_err")
+
+	mockStore.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
 }
 
 func TestService_alterComment(t *testing.T) {

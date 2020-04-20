@@ -200,6 +200,29 @@ func (s *DataStore) DeleteUserDetail(siteID string, userID string, detail engine
 	})
 }
 
+// ResubmitStagingImages retrieves timestamp of the oldest image in staging and
+// calls s.submitImages on all comments newer than it
+func (s *DataStore) ResubmitStagingImages(sites []string) error {
+	ts, err := s.ImageService.GetFirstStagingTs()
+	if err != nil {
+		return err
+	}
+	if ts.IsZero() {
+		return nil
+	}
+	for _, site := range sites {
+		locator := store.Locator{SiteID: site}
+		comments, err := s.FindSince(locator, "time", store.User{}, ts)
+		if err != nil {
+			return err
+		}
+		for _, c := range comments {
+			s.submitImages(c.Locator, c.ID)
+		}
+	}
+	return nil
+}
+
 // submitImages initiated delayed commit of all images from the comment uploaded to remark42
 func (s *DataStore) submitImages(locator store.Locator, commentID string) {
 
