@@ -140,16 +140,15 @@ func TestService_SubmitDelay(t *testing.T) {
 	store.AssertNumberOfCalls(t, "Commit", 5)
 }
 
-func TestService_GetStagingImages(t *testing.T) {
+func TestService_GetFirstStagingTs(t *testing.T) {
 	store := MockStore{}
-	store.On("GetStagingImages", mock.Anything, mock.Anything).Once().Return(nil, time.Time{}, nil)
+	store.On("GetFirstStagingTs", mock.Anything, mock.Anything).Once().Return(time.Time{}, nil)
 
 	svc := Service{store: &store, ServiceParams: ServiceParams{}}
-	ids, ts, err := svc.GetStagingImages()
+	ts, err := svc.GetFirstStagingTs()
 	assert.NoError(t, err)
-	assert.Empty(t, ids)
 	assert.True(t, ts.IsZero())
-	store.AssertNumberOfCalls(t, "GetStagingImages", 1)
+	store.AssertNumberOfCalls(t, "GetFirstStagingTs", 1)
 }
 
 func TestService_resize(t *testing.T) {

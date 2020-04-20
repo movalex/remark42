@@ -39,34 +39,25 @@ func (_m *MockStore) Commit(id string) error {
 	return r0
 }
 
-// GetStagingImages provides a mock function with given fields:
-func (_m *MockStore) GetStagingImages() ([]string, time.Time, error) {
+// GetFirstStagingTs provides a mock function with given fields:
+func (_m *MockStore) GetFirstStagingTs() (time.Time, error) {
 	ret := _m.Called()
 
-	var r0 []string
-	if rf, ok := ret.Get(0).(func() []string); ok {
+	var r0 time.Time
+	if rf, ok := ret.Get(0).(func() time.Time); ok {
 		r0 = rf()
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
-		}
+		r0 = ret.Get(0).(time.Time)
 	}
 
-	var r1 time.Time
-	if rf, ok := ret.Get(1).(func() time.Time); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
 	} else {
-		r1 = ret.Get(1).(time.Time)
+		r1 = ret.Error(1)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func() error); ok {
-		r2 = rf()
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // Load provides a mock function with given fields: id

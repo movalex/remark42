@@ -65,18 +65,17 @@ func TestRemote_Cleanup(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestRemote_GetStagingImages(t *testing.T) {
-	ts := testServer(t, `{"method":"image.get_staging_images","id":1}`,
-		`{"result":{"IDs":[],"TS":"0001-01-01T00:00:00Z"},"id":1}`)
+func TestRemote_GetFirstStagingTs(t *testing.T) {
+	ts := testServer(t, `{"method":"image.get_first_staging_ts","id":1}`,
+		`{"result":"0001-01-01T00:00:00Z","id":1}`)
 	defer ts.Close()
 	c := RPC{Client: jrpc.Client{API: ts.URL, Client: http.Client{}}}
 
 	var a Store = &c
 	_ = a
 
-	ids, timestamp, err := c.GetStagingImages()
+	timestamp, err := c.GetFirstStagingTs()
 	assert.NoError(t, err)
-	assert.Empty(t, ids)
 	assert.True(t, timestamp.IsZero())
 }
 

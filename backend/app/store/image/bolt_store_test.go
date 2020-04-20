@@ -105,25 +105,22 @@ func TestBoltStore_Cleanup(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestBolt_GetStagingImages(t *testing.T) {
+func TestBolt_GetFirstStagingTs(t *testing.T) {
 	svc, teardown := prepareBoltImageStorageTest(t)
 	defer teardown()
 
-	// get images before saving, should be empty
-	ids, ts, err := svc.GetStagingImages()
+	// get ts on empty storage, should be zero
+	ts, err := svc.GetFirstStagingTs()
 	assert.NoError(t, err)
-	assert.Empty(t, ids)
 	assert.True(t, ts.IsZero())
 
 	// save image
-	id := "test_img"
-	err = svc.Save(id, gopherPNGBytes())
+	err = svc.Save("test_img", gopherPNGBytes())
 	assert.NoError(t, err)
 
-	// get images after saving, should contain saved image
-	ids, ts, err = svc.GetStagingImages()
+	// get ts after saving, should be non-zero
+	ts, err = svc.GetFirstStagingTs()
 	assert.NoError(t, err)
-	assert.Equal(t, []string{id}, ids)
 	assert.False(t, ts.IsZero())
 }
 

@@ -96,16 +96,15 @@ func (m *MemImage) Cleanup(_ context.Context, ttl time.Duration) error {
 	return nil
 }
 
-// GetStagingImages returns images currently in staging, and their oldest timestamp
-func (m *MemImage) GetStagingImages() (ids []string, ts time.Time, err error) {
+// GetFirstStagingTs returns oldest timestamp from images currently in staging
+func (m *MemImage) GetFirstStagingTs() (ts time.Time, err error) {
 	m.RLock()
-	for id, t := range m.insertTime {
-		ids = append(ids, id)
+	for _, t := range m.insertTime {
 		if ts.IsZero() || t.Before(ts) {
 			ts = t
 		}
 	}
 	m.RUnlock()
 
-	return ids, ts, nil
+	return ts, nil
 }
